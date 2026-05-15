@@ -1,5 +1,7 @@
 create extension if not exists "pgcrypto";
 
+create schema if not exists private;
+
 create table if not exists public.profiles (
   user_id uuid primary key references auth.users(id) on delete cascade,
   email text not null,
@@ -42,28 +44,52 @@ create table if not exists public.generations (
   updated_at timestamptz not null default now()
 );
 
-alter table public.credit_ledger
-  add constraint credit_ledger_generation_id_fkey
-  foreign key (generation_id) references public.generations(id) on delete set null;
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'credit_ledger_generation_id_fkey'
+      and conrelid = 'public.credit_ledger'::regclass
+  ) then
+    alter table public.credit_ledger
+      add constraint credit_ledger_generation_id_fkey
+      foreign key (generation_id) references public.generations(id) on delete set null;
+  end if;
+end;
+$$;
 
 alter table public.profiles enable row level security;
 alter table public.credit_ledger enable row level security;
 alter table public.generations enable row level security;
 
-create policy "profiles_select_own" on public.profiles
-  for select using (auth.uid() = user_id);
+grant usage on schema public to authenticated;
+grant select on public.profiles to authenticated;
+grant update (locale) on public.profiles to authenticated;
+grant select on public.credit_ledger to authenticated;
+grant select on public.generations to authenticated;
 
+drop policy if exists "profiles_select_own" on public.profiles;
+create policy "profiles_select_own" on public.profiles
+  for select to authenticated using (auth.uid() = user_id);
+
+drop policy if exists "profiles_update_own_locale" on public.profiles;
 create policy "profiles_update_own_locale" on public.profiles
-  for update using (auth.uid() = user_id)
+  for update to authenticated using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
+drop policy if exists "credit_ledger_select_own" on public.credit_ledger;
 create policy "credit_ledger_select_own" on public.credit_ledger
-  for select using (auth.uid() = user_id);
+  for select to authenticated using (auth.uid() = user_id);
 
+drop policy if exists "generations_select_own" on public.generations;
 create policy "generations_select_own" on public.generations
-  for select using (auth.uid() = user_id);
+  for select to authenticated using (auth.uid() = user_id);
 
-create or replace function public.handle_new_user()
+drop trigger if exists on_auth_user_created on auth.users;
+drop function if exists public.handle_new_user();
+
+create or replace function private.handle_new_user()
 returns trigger
 language plpgsql
 security definer
@@ -80,15 +106,16 @@ begin
 end;
 $$;
 
-drop trigger if exists on_auth_user_created on auth.users;
+revoke all on function private.handle_new_user() from public, anon, authenticated;
+
 create trigger on_auth_user_created
   after insert on auth.users
-  for each row execute function public.handle_new_user();
+  for each row execute function private.handle_new_user();
 
 create or replace function public.reserve_generation_credit(p_user_id uuid, p_generation_id uuid)
 returns boolean
 language plpgsql
-security definer
+security invoker
 set search_path = public
 as $$
 begin
@@ -109,10 +136,13 @@ begin
 end;
 $$;
 
+revoke all on function public.reserve_generation_credit(uuid, uuid) from public, anon, authenticated;
+grant execute on function public.reserve_generation_credit(uuid, uuid) to service_role;
+
 create or replace function public.refund_generation_credit(p_user_id uuid, p_generation_id uuid)
 returns void
 language plpgsql
-security definer
+security invoker
 set search_path = public
 as $$
 begin
@@ -126,6 +156,9 @@ begin
 end;
 $$;
 
+revoke all on function public.refund_generation_credit(uuid, uuid) from public, anon, authenticated;
+grant execute on function public.refund_generation_credit(uuid, uuid) to service_role;
+
 insert into storage.buckets (id, name, public)
 values ('reference-images', 'reference-images', false)
 on conflict (id) do nothing;
@@ -133,3 +166,11 @@ on conflict (id) do nothing;
 insert into storage.buckets (id, name, public)
 values ('generated-images', 'generated-images', false)
 on conflict (id) do nothing;
+
+drop policy if exists "generated_images_select_own" on storage.objects;
+create policy "generated_images_select_own" on storage.objects
+  for select to authenticated
+  using (
+    bucket_id = 'generated-images'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
