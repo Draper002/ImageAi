@@ -389,6 +389,26 @@ input[type="file"] {
   max-width: 440px;
 }
 
+.form-message {
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.5;
+}
+
+.form-message.error {
+  border: 1px solid #e0a29c;
+  background: #fff3f1;
+  color: #8f3128;
+}
+
+.form-message.success {
+  border: 1px solid #8ec5a8;
+  background: var(--green-soft);
+  color: var(--green);
+}
+
 .login-card form + form {
   margin-top: 14px;
   padding-top: 14px;
