@@ -9,6 +9,12 @@ describe("LoginPage", () => {
     expect(screen.getByRole("alert")).toHaveTextContent("注册失败");
   });
 
+  test("shows a clear message when Supabase email sending is rate limited", async () => {
+    render(await LoginPage({ searchParams: Promise.resolve({ error: "signup-rate-limited" }) }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent("注册邮件发送过于频繁");
+  });
+
   test("requires six characters for the signup password before submitting", async () => {
     render(await LoginPage({ searchParams: Promise.resolve({}) }));
 

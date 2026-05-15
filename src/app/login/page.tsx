@@ -11,7 +11,10 @@ type LoginPageProps = {
 
 const errorMessages: Record<string, string> = {
   login: "登录失败，请检查邮箱和密码。",
-  signup: "注册失败，请确认邮箱格式正确、密码至少 6 位，或换一个未注册邮箱。"
+  signup: "注册失败，请确认邮箱格式正确，或换一个未注册邮箱。",
+  "signup-existing": "这个邮箱已经注册过，请直接登录，或换一个邮箱注册。",
+  "signup-password": "注册失败，请确认密码至少 6 位。",
+  "signup-rate-limited": "注册邮件发送过于频繁，请稍后再试。当前版本已改为不发送确认邮件，请刷新页面后重新注册。"
 };
 
 const noticeMessages: Record<string, string> = {
