@@ -8,11 +8,11 @@ describe("parseEnv", () => {
       NEXT_PUBLIC_SUPABASE_ANON_KEY: "anon",
       SUPABASE_SERVICE_ROLE_KEY: "service",
       OPENAI_API_KEY: "openai",
-      OPENAI_IMAGE_MODEL: "gpt-image-1",
+      OPENAI_IMAGE_MODEL: "gpt-image-2",
       NEXT_PUBLIC_APP_URL: "https://app.example.com"
     });
 
-    expect(result.OPENAI_IMAGE_MODEL).toBe("gpt-image-1");
+    expect(result.OPENAI_IMAGE_MODEL).toBe("gpt-image-2");
     expect(result.NEXT_PUBLIC_APP_URL).toBe("https://app.example.com");
   });
 

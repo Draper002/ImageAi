@@ -8,7 +8,7 @@ describe("generateImage", () => {
 
     const bytes = await generateImage({
       client: { images: { generate, edit } },
-      model: "gpt-image-1",
+      model: "gpt-image-2",
       prompt: "生成一张图片",
       aspectRatio: "1:1"
     });
@@ -24,7 +24,7 @@ describe("generateImage", () => {
 
     await generateImage({
       client: { images: { generate, edit } },
-      model: "gpt-image-1",
+      model: "gpt-image-2",
       prompt: "Create image",
       aspectRatio: "16:9",
       referenceImage: new File(["image"], "ref.png", { type: "image/png" })
