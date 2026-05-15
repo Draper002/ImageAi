@@ -1,0 +1,975 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI Image SaaS MVP - Layout Preview</title>
+  <style>
+    :root {
+      --ink: #18231f;
+      --muted: #64706b;
+      --line: #dfe6e2;
+      --paper: #f7f8f5;
+      --surface: #ffffff;
+      --green: #1f7a5a;
+      --green-soft: #e5f2ec;
+      --amber: #f3b23e;
+      --coral: #e76f5d;
+      --blue: #4b74e8;
+      --shadow: 0 18px 60px rgba(28, 40, 35, 0.10);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+      letter-spacing: 0;
+    }
+
+    .board {
+      width: min(1440px, 100%);
+      margin: 0 auto;
+      padding: 28px;
+    }
+
+    .titlebar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .titlebar h1 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.2;
+    }
+
+    .titlebar p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .pill {
+      border: 1px solid var(--line);
+      background: var(--surface);
+      border-radius: 999px;
+      padding: 7px 10px;
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 22px;
+    }
+
+    .frame {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .frame-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 42px;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--line);
+      background: #fbfcfa;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .browser-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .browser-dots i {
+      width: 8px;
+      height: 8px;
+      display: block;
+      border-radius: 50%;
+      background: var(--line);
+    }
+
+    .page {
+      min-height: 620px;
+      background: #fbfcfa;
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      height: 70px;
+      padding: 0 42px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,0.88);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 760;
+      font-size: 17px;
+    }
+
+    .logo {
+      width: 32px;
+      height: 32px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: var(--ink);
+      color: #fff;
+      font-weight: 800;
+    }
+
+    .navlinks {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    button, .button {
+      min-height: 38px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      padding: 0 14px;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 650;
+      cursor: default;
+    }
+
+    .button.primary { background: var(--green); color: #fff; }
+    .button.secondary { background: var(--surface); border-color: var(--line); color: var(--ink); }
+    .button.ghost { background: transparent; color: var(--muted); }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 40px;
+      align-items: center;
+      padding: 58px 42px 46px;
+    }
+
+    .hero h2 {
+      margin: 0;
+      max-width: 620px;
+      font-size: 48px;
+      line-height: 1.06;
+      letter-spacing: 0;
+    }
+
+    .hero-copy {
+      margin: 18px 0 0;
+      max-width: 560px;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.72;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 30px;
+      max-width: 560px;
+    }
+
+    .stat {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      background: var(--surface);
+    }
+
+    .stat b {
+      display: block;
+      font-size: 20px;
+      margin-bottom: 4px;
+    }
+
+    .stat span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .hero-demo {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--surface);
+    }
+
+    .demo-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 13px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0 10px;
+      color: var(--muted);
+      font-size: 12px;
+      background: #fff;
+    }
+
+    .chip.active {
+      border-color: #9bcbb8;
+      background: var(--green-soft);
+      color: var(--green);
+      font-weight: 700;
+    }
+
+    .demo-body {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      min-height: 390px;
+    }
+
+    .demo-panel {
+      padding: 18px;
+      border-right: 1px solid var(--line);
+      background: #fcf7ee;
+    }
+
+    .field-label {
+      margin: 0 0 7px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .input {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      padding: 10px 11px;
+      color: var(--ink);
+      font-size: 13px;
+    }
+
+    .demo-output {
+      display: grid;
+      grid-template-columns: 1fr 170px;
+      gap: 14px;
+      padding: 18px;
+    }
+
+    .image-preview {
+      position: relative;
+      min-height: 280px;
+      overflow: hidden;
+      border-radius: 8px;
+      background:
+        linear-gradient(145deg, rgba(31,122,90,0.20), transparent 42%),
+        linear-gradient(25deg, rgba(231,111,93,0.18), transparent 42%),
+        #ecf1ed;
+      border: 1px solid #d7e0da;
+    }
+
+    .image-preview::before {
+      content: "";
+      position: absolute;
+      inset: 46px 62px 42px;
+      border-radius: 8px;
+      background:
+        radial-gradient(circle at 48% 36%, #ffcc7a 0 11px, transparent 12px),
+        linear-gradient(180deg, #7a9f8b, #456d5d);
+      box-shadow: inset 0 -60px 0 rgba(32,45,39,0.25);
+    }
+
+    .image-preview::after {
+      content: "右侧留白 / 16:9 / 电影感";
+      position: absolute;
+      right: 18px;
+      bottom: 16px;
+      border-radius: 999px;
+      padding: 8px 10px;
+      background: rgba(255,255,255,0.86);
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .side-stack {
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+
+    .mini-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: #fff;
+    }
+
+    .mini-card h4 {
+      margin: 0 0 8px;
+      font-size: 13px;
+    }
+
+    .mini-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .app-shell {
+      display: grid;
+      grid-template-columns: 230px 1fr;
+      min-height: 780px;
+      background: #fbfcfa;
+    }
+
+    .sidebar {
+      border-right: 1px solid var(--line);
+      padding: 22px;
+      background: #ffffff;
+    }
+
+    .side-nav {
+      display: grid;
+      gap: 8px;
+      margin-top: 30px;
+    }
+
+    .side-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      height: 40px;
+      border-radius: 8px;
+      padding: 0 10px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 650;
+    }
+
+    .side-item.active {
+      background: var(--green-soft);
+      color: var(--green);
+    }
+
+    .dot-icon {
+      width: 18px;
+      height: 18px;
+      display: grid;
+      place-items: center;
+      border-radius: 6px;
+      background: #eef2ef;
+      color: currentColor;
+      font-size: 10px;
+    }
+
+    .credits {
+      margin-top: 32px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      background: #fcf7ee;
+    }
+
+    .credits b {
+      display: block;
+      font-size: 26px;
+      margin: 6px 0;
+    }
+
+    .workspace {
+      min-width: 0;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 72px;
+      padding: 0 30px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,0.82);
+    }
+
+    .topbar h3 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .topbar small {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .create-grid {
+      display: grid;
+      grid-template-columns: minmax(360px, 0.9fr) minmax(420px, 1.1fr);
+      gap: 22px;
+      padding: 24px 30px 30px;
+    }
+
+    .section {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      padding: 18px;
+    }
+
+    .section + .section { margin-top: 14px; }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .section-title h4 {
+      margin: 0;
+      font-size: 15px;
+    }
+
+    .textarea {
+      min-height: 88px;
+      resize: none;
+    }
+
+    .options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .option {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0 10px;
+      background: #fff;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .option.active {
+      border-color: #93c7b0;
+      background: var(--green-soft);
+      color: var(--green);
+    }
+
+    .ratio-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+
+    .ratio {
+      min-height: 76px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      display: grid;
+      place-items: center;
+      gap: 5px;
+      padding: 8px 6px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .ratio.active {
+      border-color: #7cbaa0;
+      background: var(--green-soft);
+      color: var(--green);
+    }
+
+    .ratio-shape {
+      border: 2px solid currentColor;
+      border-radius: 4px;
+      opacity: 0.9;
+    }
+
+    .square { width: 28px; height: 28px; }
+    .portrait { width: 22px; height: 34px; }
+    .wide { width: 42px; height: 24px; }
+    .tall { width: 18px; height: 38px; }
+    .landscape { width: 36px; height: 25px; }
+
+    .upload-box {
+      min-height: 84px;
+      display: grid;
+      grid-template-columns: 70px 1fr;
+      gap: 12px;
+      align-items: center;
+      border: 1px dashed #b7c6bf;
+      border-radius: 8px;
+      padding: 12px;
+      background: #fbfcfa;
+    }
+
+    .thumb {
+      width: 70px;
+      height: 58px;
+      border-radius: 8px;
+      background:
+        linear-gradient(135deg, rgba(75,116,232,0.18), transparent 55%),
+        linear-gradient(45deg, rgba(243,178,62,0.32), transparent 55%),
+        #edf2f4;
+      border: 1px solid var(--line);
+    }
+
+    .result-panel {
+      display: grid;
+      gap: 14px;
+    }
+
+    .large-result {
+      min-height: 390px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+      background:
+        linear-gradient(150deg, rgba(31,122,90,0.18), transparent 44%),
+        linear-gradient(40deg, rgba(75,116,232,0.14), transparent 46%),
+        #edf1ec;
+    }
+
+    .large-result .photo {
+      position: absolute;
+      left: 56px;
+      top: 46px;
+      width: 58%;
+      height: 72%;
+      border-radius: 8px;
+      background:
+        radial-gradient(circle at 60% 24%, #fff1a6 0 18px, transparent 19px),
+        linear-gradient(155deg, #99c7ae 0 48%, #385d51 49% 100%);
+      box-shadow: inset 0 -72px 0 rgba(20,33,29,0.24);
+    }
+
+    .large-result .blank {
+      position: absolute;
+      right: 28px;
+      top: 48px;
+      bottom: 48px;
+      width: 29%;
+      border: 1px dashed rgba(31,122,90,0.45);
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      color: var(--green);
+      font-size: 13px;
+      font-weight: 750;
+      background: rgba(255,255,255,0.34);
+    }
+
+    .prompt-box {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .prompt-box pre {
+      margin: 0;
+      min-height: 138px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #10201a;
+      color: #dce9e2;
+      padding: 13px;
+      white-space: pre-wrap;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .history-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px;
+      padding: 24px 30px 30px;
+    }
+
+    .history-card {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .history-image {
+      height: 160px;
+      background:
+        linear-gradient(145deg, rgba(231,111,93,0.18), transparent 45%),
+        linear-gradient(45deg, rgba(31,122,90,0.22), transparent 45%),
+        #edf1ec;
+    }
+
+    .history-body {
+      padding: 13px;
+    }
+
+    .history-body h4 {
+      margin: 0 0 7px;
+      font-size: 14px;
+    }
+
+    .history-body p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .overlay-wrap {
+      position: relative;
+      min-height: 500px;
+      background: #f4f6f3;
+      padding: 34px;
+    }
+
+    .login-panel {
+      width: 380px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      padding: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .login-panel h3 { margin: 0 0 6px; font-size: 22px; }
+    .login-panel p { margin: 0 0 18px; color: var(--muted); font-size: 13px; line-height: 1.55; }
+
+    .modal {
+      position: absolute;
+      right: 44px;
+      top: 78px;
+      width: 360px;
+      border: 1px solid #e7d5bd;
+      border-radius: 8px;
+      background: #fffaf1;
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .modal-mark {
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: #fff0cf;
+      color: #a76500;
+      margin-bottom: 12px;
+      font-weight: 900;
+    }
+
+    .modal h3 {
+      margin: 0 0 8px;
+      font-size: 19px;
+    }
+
+    .modal p {
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 920px) {
+      .board { padding: 16px; }
+      .titlebar { align-items: flex-start; flex-direction: column; }
+      .hero, .create-grid, .app-shell, .demo-body, .demo-output, .prompt-box {
+        grid-template-columns: 1fr;
+      }
+      .hero { padding: 32px 18px; }
+      .hero h2 { font-size: 34px; }
+      .nav { padding: 0 18px; }
+      .navlinks { display: none; }
+      .sidebar { display: none; }
+      .ratio-grid { grid-template-columns: repeat(3, 1fr); }
+      .history-grid { grid-template-columns: 1fr; }
+      .modal { position: static; width: auto; margin-top: 20px; }
+      .login-panel { width: auto; }
+    }
+  </style>
+</head>
+<body>
+  <main class="board">
+    <header class="titlebar">
+      <div>
+        <h1>AI 生图 SaaS MVP - 网站样式布局预览</h1>
+        <p>默认中文界面，支持英文切换。视觉方向：清爽、可信、工具型，核心页面是生图工作台。</p>
+      </div>
+      <div class="legend">
+        <span class="pill">默认中文</span>
+        <span class="pill">邮箱登录</span>
+        <span class="pill">2 免费积分</span>
+        <span class="pill">可选参考图</span>
+      </div>
+    </header>
+
+    <section class="grid">
+      <div class="frame">
+        <div class="frame-label">
+          <span>首页 / Landing</span>
+          <span class="browser-dots"><i></i><i></i><i></i></span>
+        </div>
+        <div class="page">
+          <nav class="nav">
+            <div class="brand"><span class="logo">P</span> PromptCanvas</div>
+            <div class="navlinks">
+              <span>生成图片</span><span>历史记录</span><span>积分</span><span>价格</span>
+            </div>
+            <div class="nav-actions">
+              <button class="button ghost">EN</button>
+              <button class="button secondary">登录</button>
+              <button class="button primary">开始生成</button>
+            </div>
+          </nav>
+          <div class="hero">
+            <div>
+              <h2>不用写复杂提示词，也能生成更稳定的 AI 图片。</h2>
+              <p class="hero-copy">填写主体，按需选择类型、比例、风格、场景和留白要求。系统会整理成结构化提示词，也支持上传 1 张参考图。</p>
+              <div class="hero-actions">
+                <button class="button primary">免费试用 2 次</button>
+                <button class="button secondary">查看示例流程</button>
+              </div>
+              <div class="stats">
+                <div class="stat"><b>2</b><span>新用户免费积分</span></div>
+                <div class="stat"><b>1</b><span>每张图消耗积分</span></div>
+                <div class="stat"><b>中/EN</b><span>双语界面切换</span></div>
+              </div>
+            </div>
+            <div class="hero-demo">
+              <div class="demo-toolbar">
+                <div class="chip-row">
+                  <span class="chip active">海报</span>
+                  <span class="chip active">16:9</span>
+                  <span class="chip">电影感</span>
+                  <span class="chip">右侧留白</span>
+                </div>
+                <button class="button primary">生成</button>
+              </div>
+              <div class="demo-body">
+                <div class="demo-panel">
+                  <p class="field-label">主体</p>
+                  <div class="input">一间火星上的未来咖啡馆</div>
+                  <p class="field-label" style="margin-top:14px">补充要求</p>
+                  <div class="input">暖色灯光，适合活动封面</div>
+                </div>
+                <div class="demo-output">
+                  <div class="image-preview"></div>
+                  <div class="side-stack">
+                    <div class="mini-card"><h4>实际提交</h4><p>保留用户原语言，不强制翻译成英文。</p></div>
+                    <div class="mini-card"><h4>历史记录</h4><p>生成图与参考图保存到私有存储。</p></div>
+                    <div class="mini-card"><h4>积分</h4><p>成功生成后扣 1 积分。</p></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="frame">
+        <div class="frame-label">
+          <span>生图页 / Guided Generator</span>
+          <span class="browser-dots"><i></i><i></i><i></i></span>
+        </div>
+        <div class="app-shell">
+          <aside class="sidebar">
+            <div class="brand"><span class="logo">P</span> PromptCanvas</div>
+            <div class="side-nav">
+              <div class="side-item active"><span class="dot-icon">✦</span>生成图片</div>
+              <div class="side-item"><span class="dot-icon">□</span>历史记录</div>
+              <div class="side-item"><span class="dot-icon">↑</span>升级积分</div>
+              <div class="side-item"><span class="dot-icon">⚙</span>设置</div>
+            </div>
+            <div class="credits">
+              <span class="field-label">当前积分</span>
+              <b>2</b>
+              <button class="button secondary" style="width:100%">升级</button>
+            </div>
+          </aside>
+          <section class="workspace">
+            <div class="topbar">
+              <div>
+                <h3>创建图片</h3>
+                <small>只填写主体也可以生成，其余选项都是可选增强项。</small>
+              </div>
+              <div class="nav-actions">
+                <button class="button secondary">中文</button>
+                <button class="button primary">生成图片</button>
+              </div>
+            </div>
+            <div class="create-grid">
+              <div>
+                <div class="section">
+                  <div class="section-title"><h4>1. 描述主体</h4><span class="pill">必填</span></div>
+                  <textarea class="input textarea">一只穿着宇航服的橘猫，站在月球咖啡馆门口</textarea>
+                </div>
+                <div class="section">
+                  <div class="section-title"><h4>2. 可选参数</h4><span class="pill">可不选</span></div>
+                  <p class="field-label">图片类型</p>
+                  <div class="options"><span class="option active">社媒封面</span><span class="option">海报</span><span class="option">商品图</span><span class="option">插画</span></div>
+                  <p class="field-label" style="margin-top:14px">画面比例</p>
+                  <div class="ratio-grid">
+                    <div class="ratio"><span class="ratio-shape square"></span><span>1:1</span></div>
+                    <div class="ratio"><span class="ratio-shape portrait"></span><span>4:5</span></div>
+                    <div class="ratio active"><span class="ratio-shape wide"></span><span>16:9</span></div>
+                    <div class="ratio"><span class="ratio-shape tall"></span><span>9:16</span></div>
+                    <div class="ratio"><span class="ratio-shape landscape"></span><span>3:2</span></div>
+                  </div>
+                  <p class="field-label" style="margin-top:14px">风格 / 场景 / 留白</p>
+                  <div class="options"><span class="option active">电影感</span><span class="option">真实摄影</span><span class="option active">右侧留白</span><span class="option">工作室</span></div>
+                </div>
+                <div class="section">
+                  <div class="section-title"><h4>3. 参考图与补充要求</h4><span class="pill">可选</span></div>
+                  <div class="upload-box">
+                    <div class="thumb"></div>
+                    <div>
+                      <b style="font-size:13px">已添加 1 张参考图</b>
+                      <p style="margin:5px 0 0;color:var(--muted);font-size:12px">支持 JPG / PNG / WebP，最多 10MB。</p>
+                    </div>
+                  </div>
+                  <textarea class="input textarea" style="margin-top:10px">不要出现乱码文字、水印或低清细节。</textarea>
+                </div>
+              </div>
+
+              <div class="result-panel">
+                <div class="large-result">
+                  <div class="photo"></div>
+                  <div class="blank">右侧留白区</div>
+                </div>
+                <div class="prompt-box">
+                  <pre>中文预览
+请生成一张高质量社媒封面。
+主体：一只穿着宇航服的橘猫...
+比例：16:9
+构图：右侧留白</pre>
+                  <pre>Actual submitted prompt
+请生成一张高质量社媒封面。
+主体保持用户原文。
+参考上传图片的构图和风格。
+避免水印、乱码文字和低清细节。</pre>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <div class="frame">
+        <div class="frame-label">
+          <span>历史页 / History</span>
+          <span class="browser-dots"><i></i><i></i><i></i></span>
+        </div>
+        <div class="page">
+          <div class="topbar">
+            <div>
+              <h3>生成历史</h3>
+              <small>按时间倒序展示，图片通过私有存储 signed URL 访问。</small>
+            </div>
+            <button class="button primary">继续生成</button>
+          </div>
+          <div class="history-grid">
+            <div class="history-card"><div class="history-image"></div><div class="history-body"><h4>月球咖啡馆封面</h4><p>16:9 · 电影感 · 使用参考图<br>今天 20:32 · 已成功</p></div></div>
+            <div class="history-card"><div class="history-image" style="background-color:#eef2f7"></div><div class="history-body"><h4>极简产品海报</h4><p>4:5 · 极简 · 左侧留白<br>昨天 18:04 · 已成功</p></div></div>
+            <div class="history-card"><div class="history-image" style="background-color:#f4efe5"></div><div class="history-body"><h4>城市夜景插画</h4><p>1:1 · 插画 · 无参考图<br>昨天 12:11 · 已成功</p></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="frame">
+        <div class="frame-label">
+          <span>登录与积分不足弹窗 / Auth & Upgrade</span>
+          <span class="browser-dots"><i></i><i></i><i></i></span>
+        </div>
+        <div class="overlay-wrap">
+          <div class="login-panel">
+            <div class="brand" style="margin-bottom:22px"><span class="logo">P</span> PromptCanvas</div>
+            <h3>登录或注册</h3>
+            <p>注册后自动获得 2 个免费积分。第一版不做邮件验证和找回密码。</p>
+            <p class="field-label">邮箱</p>
+            <div class="input">creator@example.com</div>
+            <p class="field-label" style="margin-top:12px">密码</p>
+            <div class="input">••••••••</div>
+            <button class="button primary" style="width:100%;margin-top:16px">继续</button>
+          </div>
+          <div class="modal">
+            <div class="modal-mark">!</div>
+            <h3>积分不足</h3>
+            <p>你当前没有可用积分。第一版先展示升级入口，暂不接入真实支付。</p>
+            <div class="nav-actions">
+              <button class="button primary">查看升级方案</button>
+              <button class="button secondary">稍后再说</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

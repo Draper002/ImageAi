@@ -1,0 +1,59 @@
+import OpenAI from "openai";
+
+type ImageResponse = {
+  data?: Array<{ b64_json?: string | null }>;
+};
+
+type OpenAIImageClient = {
+  images: {
+    generate: (args: Record<string, unknown>) => Promise<ImageResponse>;
+    edit: (args: Record<string, unknown>) => Promise<ImageResponse>;
+  };
+};
+
+type GenerateImageArgs = {
+  client: OpenAIImageClient;
+  model: string;
+  prompt: string;
+  aspectRatio: string;
+  referenceImage?: File;
+};
+
+function sizeForAspectRatio(aspectRatio: string): "1024x1024" | "1536x1024" | "1024x1536" {
+  if (aspectRatio === "16:9" || aspectRatio === "3:2") return "1536x1024";
+  if (aspectRatio === "9:16" || aspectRatio === "4:5") return "1024x1536";
+  return "1024x1024";
+}
+
+function decodeImage(data: ImageResponse["data"]): Buffer {
+  const b64Json = data?.[0]?.b64_json;
+  if (!b64Json) {
+    throw new Error("OpenAI did not return image data.");
+  }
+  return Buffer.from(b64Json, "base64");
+}
+
+export async function generateImage(args: GenerateImageArgs): Promise<Buffer> {
+  const size = sizeForAspectRatio(args.aspectRatio);
+
+  if (args.referenceImage) {
+    const response = await args.client.images.edit({
+      model: args.model,
+      image: args.referenceImage,
+      prompt: args.prompt,
+      size
+    });
+    return decodeImage(response.data);
+  }
+
+  const response = await args.client.images.generate({
+    model: args.model,
+    prompt: args.prompt,
+    size
+  });
+  return decodeImage(response.data);
+}
+
+export function createOpenAIClient(apiKey: string): OpenAIImageClient {
+  return new OpenAI({ apiKey }) as unknown as OpenAIImageClient;
+}

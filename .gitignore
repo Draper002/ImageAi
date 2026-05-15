@@ -1,0 +1,10 @@
+node_modules/
+.next/
+.next-dev/
+.npm-cache/
+tools/
+*.tsbuildinfo
+.env*
+!.env.example
+!.env.local.example
+.superpowers/
