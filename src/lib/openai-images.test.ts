@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from "vitest";
-import { generateImage } from "./openai-images";
+import { generateImage, resolveOpenAIProxyUrl } from "./openai-images";
 
 describe("generateImage", () => {
   test("uses text generation when no reference image exists", async () => {
@@ -32,5 +32,19 @@ describe("generateImage", () => {
 
     expect(edit).toHaveBeenCalled();
     expect(generate).not.toHaveBeenCalled();
+  });
+
+  test("resolves an optional OpenAI proxy URL", () => {
+    expect(resolveOpenAIProxyUrl({
+      HTTP_PROXY: "http://127.0.0.1:1080",
+      HTTPS_PROXY: "http://127.0.0.1:7890",
+      OPENAI_PROXY_URL: "http://127.0.0.1:7897"
+    })).toBe("http://127.0.0.1:7897");
+
+    expect(resolveOpenAIProxyUrl({
+      HTTPS_PROXY: "http://127.0.0.1:7890"
+    })).toBe("http://127.0.0.1:7890");
+
+    expect(resolveOpenAIProxyUrl({})).toBeUndefined();
   });
 });

@@ -13,15 +13,15 @@ type AuthErrorLike = {
 function signupErrorTarget(error?: AuthErrorLike | null) {
   const message = error?.message?.toLowerCase() ?? "";
   if (error?.code === "over_email_send_rate_limit" || error?.status === 429) {
-    return "/login?error=signup-rate-limited";
+    return "/login?mode=signup&error=signup-rate-limited";
   }
   if (message.includes("already") || message.includes("registered") || message.includes("exists")) {
-    return "/login?error=signup-existing";
+    return "/login?mode=signup&error=signup-existing";
   }
   if (message.includes("password")) {
-    return "/login?error=signup-password";
+    return "/login?mode=signup&error=signup-password";
   }
-  return "/login?error=signup";
+  return "/login?mode=signup&error=signup";
 }
 
 export async function signIn(formData: FormData) {
@@ -41,7 +41,7 @@ export async function signUp(formData: FormData) {
   const password = String(formData.get("password") ?? "");
 
   if (!email || password.length < 6) {
-    redirect("/login?error=signup-password");
+    redirect("/login?mode=signup&error=signup-password");
   }
 
   const admin = createSupabaseAdminClient();

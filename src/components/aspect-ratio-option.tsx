@@ -14,7 +14,8 @@ export function AspectRatioOption({ value, label, shape, selected = false, onCha
         name="aspectRatio"
         value={value}
         checked={selected}
-        onChange={() => onChange?.(value)}
+        onClick={() => onChange?.(value)}
+        onChange={() => undefined}
       />
       <span aria-label={`${label} aspect ratio preview`} data-shape={shape} className={`ratio-shape ratio-${shape}`} />
       <span>{label}</span>

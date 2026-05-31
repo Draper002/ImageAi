@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { HttpsProxyAgent } from "https-proxy-agent";
 
 type ImageResponse = {
   data?: Array<{ b64_json?: string | null }>;
@@ -18,6 +19,8 @@ type GenerateImageArgs = {
   aspectRatio: string;
   referenceImage?: File;
 };
+
+type ProxyEnv = NodeJS.ProcessEnv | Record<string, string | undefined>;
 
 function sizeForAspectRatio(aspectRatio: string): "1024x1024" | "1536x1024" | "1024x1536" {
   if (aspectRatio === "16:9" || aspectRatio === "3:2") return "1536x1024";
@@ -54,6 +57,15 @@ export async function generateImage(args: GenerateImageArgs): Promise<Buffer> {
   return decodeImage(response.data);
 }
 
+export function resolveOpenAIProxyUrl(source: ProxyEnv = process.env): string | undefined {
+  return source.OPENAI_PROXY_URL || source.HTTPS_PROXY || source.HTTP_PROXY || undefined;
+}
+
 export function createOpenAIClient(apiKey: string): OpenAIImageClient {
-  return new OpenAI({ apiKey }) as unknown as OpenAIImageClient;
+  const proxyUrl = resolveOpenAIProxyUrl();
+
+  return new OpenAI({
+    apiKey,
+    ...(proxyUrl ? { httpAgent: new HttpsProxyAgent(proxyUrl) } : {})
+  }) as unknown as OpenAIImageClient;
 }

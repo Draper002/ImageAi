@@ -65,6 +65,20 @@ if (-not (Test-Path -LiteralPath "node_modules")) {
   }
 }
 
+if (-not $env:OPENAI_PROXY_URL) {
+  try {
+    $openAIUri = [Uri]"https://api.openai.com/v1/models"
+    $systemProxy = [System.Net.WebRequest]::DefaultWebProxy
+    $proxyUri = $systemProxy.GetProxy($openAIUri)
+    if ($proxyUri -and -not $systemProxy.IsBypassed($openAIUri) -and $proxyUri.AbsoluteUri -ne $openAIUri.AbsoluteUri) {
+      $env:OPENAI_PROXY_URL = $proxyUri.AbsoluteUri.TrimEnd("/")
+      Write-Host "OpenAI proxy: using Windows default proxy for Node requests." -ForegroundColor DarkGray
+    }
+  } catch {
+    Write-Host "OpenAI proxy: no Windows default proxy detected." -ForegroundColor DarkGray
+  }
+}
+
 $port = $Port
 if ($port -gt 0 -and (Test-LocalPortOpen $port)) {
   Write-Host "Port $port is already in use." -ForegroundColor Red

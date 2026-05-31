@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { reserveGenerationCredit, refundGenerationCredit } from "@/lib/credits";
 import { getEnv } from "@/lib/env";
+import { generationFailurePayload, messageFromUnknownError } from "@/lib/generation-errors";
 import { parseGenerateForm } from "@/lib/generate-form";
 import { createOpenAIClient, generateImage } from "@/lib/openai-images";
 import { buildPrompt } from "@/lib/prompt-builder";
@@ -86,15 +87,21 @@ export async function POST(request: Request) {
       updated_at: new Date().toISOString()
     }).eq("id", generationId);
 
-    return NextResponse.json({ id: generationId, status: "succeeded" });
+    const signed = await admin.storage.from("generated-images").createSignedUrl(generatedPath, 60 * 10);
+    return NextResponse.json({
+      id: generationId,
+      imageUrl: signed.data?.signedUrl ?? null,
+      status: "succeeded"
+    });
   } catch (error) {
+    const failure = generationFailurePayload(error);
     await refundGenerationCredit(admin, user.id, generationId);
     await admin.from("generations").update({
       status: "failed",
-      error_message: error instanceof Error ? error.message : "Generation failed",
+      error_message: messageFromUnknownError(error),
       updated_at: new Date().toISOString()
     }).eq("id", generationId);
 
-    return NextResponse.json({ error: "Generation failed" }, { status: 500 });
+    return NextResponse.json(failure, { status: 500 });
   }
 }
